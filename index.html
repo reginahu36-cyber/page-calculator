@@ -2327,6 +2327,21 @@ renderFlowers();selectFlower(0);
 try{const saved=JSON.parse(localStorage.getItem('pagePawsAppearance_v4')||'null');if(saved)applyAppearance(saved.color,saved.theme);else applyAppearance('cream','court')}catch(e){applyAppearance('cream','court')}
 
 let selected=0, previousLevel=1;
+// 開啟頁面時沿用上次輸入的工作頁數，不重設進度。
+const PROGRESS_STORAGE_KEY='pagePawsWorkProgress_v1';
+function restoreWorkProgress(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY)||'null');
+  if(saved){
+   if(Number.isInteger(saved.total)&&saved.total>=1)$('total').value=saved.total;
+   if(Number.isInteger(saved.current)&&saved.current>=0)$('current').value=Math.min(saved.current,Number($('total').value)||saved.total);
+  }
+ }catch(e){}
+}
+function saveWorkProgress(){
+ try{localStorage.setItem(PROGRESS_STORAGE_KEY,JSON.stringify({total:Math.max(1,Number($('total').value)||1),current:Math.max(0,Number($('current').value)||0)}));}catch(e){}
+}
+restoreWorkProgress();
 function renderRoster(){
  $('roster').innerHTML=heroes.map((h,i)=>`<button class="charBtn ${i===selected?'active':''}" data-id="${i}" aria-label="選擇${h.job}"><img src="${h.art}" alt=""><span>${h.job}</span></button>`).join('');
  $('roster').querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>selectHero(Number(btn.dataset.id))));
@@ -2362,6 +2377,7 @@ function calc(){
  if(!Number.isInteger(t)||t<1){$('error').textContent='總頁數請輸入大於 0 的整數。';return}
  if(!Number.isInteger(c)||c<0||c>t){$('error').textContent='目前頁數需介於 0 到總頁數之間。';return}
  $('error').textContent='';
+ saveWorkProgress();
  $('pageSlider').max=t;
  $('pageSlider').value=c;
  $('sliderValue').textContent=c+' / '+t+' 頁';
